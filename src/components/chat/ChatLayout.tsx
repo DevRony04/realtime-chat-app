@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AuthUser } from '@/types/auth';
 import { UserProfile } from '@/types/user';
 import { getUsers, createUserProfile } from '@/lib/appwrite/users';
@@ -21,7 +21,21 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+
+  // Initialize unread counts from sessionStorage for session persistence
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(() => {
+    if (typeof window !== 'undefined' && currentUser?.$id) {
+      try {
+        const saved = sessionStorage.getItem(`unread_counts_${currentUser.$id}`);
+        if (saved) return JSON.parse(saved);
+      } catch {
+        // Fallback if sessionStorage is disabled
+      }
+    }
+    return {};
+  });
+
+  const processedUnreadIdsRef = useRef<Set<string>>(new Set());
 
   // Message hook for current conversation
   const {
@@ -79,12 +93,30 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
     [addMessageIfNew]
   );
 
-  const handleUnreadMessage = useCallback((senderId: string) => {
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [senderId]: (prev[senderId] || 0) + 1,
-    }));
-  }, []);
+  const handleUnreadMessage = useCallback(
+    (senderId: string, messageId?: string) => {
+      if (messageId) {
+        if (processedUnreadIdsRef.current.has(messageId)) return;
+        processedUnreadIdsRef.current.add(messageId);
+      }
+
+      setUnreadCounts((prev) => {
+        const updated = {
+          ...prev,
+          [senderId]: (prev[senderId] || 0) + 1,
+        };
+        if (currentUser?.$id && typeof window !== 'undefined') {
+          try {
+            sessionStorage.setItem(`unread_counts_${currentUser.$id}`, JSON.stringify(updated));
+          } catch {
+            // Ignore storage errors
+          }
+        }
+        return updated;
+      });
+    },
+    [currentUser?.$id]
+  );
 
   // Hook into Appwrite Realtime
   useRealtimeMessages({
@@ -101,6 +133,13 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
       const updated = { ...prev };
       delete updated[user.userId];
       delete updated[user.$id];
+      if (currentUser?.$id && typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(`unread_counts_${currentUser.$id}`, JSON.stringify(updated));
+        } catch {
+          // Ignore storage errors
+        }
+      }
       return updated;
     });
   };

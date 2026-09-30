@@ -8,7 +8,7 @@ interface RealtimeParams {
   currentUserId?: string;
   selectedUserId?: string;
   onNewMessage: (message: Message) => void;
-  onUnreadMessage?: (senderId: string) => void;
+  onUnreadMessage?: (senderId: string, messageId?: string) => void;
 }
 
 export function useRealtimeMessages({
@@ -21,16 +21,25 @@ export function useRealtimeMessages({
     if (!currentUserId) return;
 
     const unsubscribe = subscribeToMessages((incomingMessage: Message) => {
-      const isForCurrentConversation =
-        (incomingMessage.senderId === currentUserId && incomingMessage.recipientId === selectedUserId) ||
-        (incomingMessage.senderId === selectedUserId && incomingMessage.recipientId === currentUserId);
+      // Ignore messages sent by the current user
+      if (incomingMessage.senderId === currentUserId) {
+        const isForCurrentConversation = selectedUserId && incomingMessage.recipientId === selectedUserId;
+        if (isForCurrentConversation) {
+          onNewMessage(incomingMessage);
+        }
+        return;
+      }
+
+      const isForCurrentConversation = selectedUserId &&
+        ((incomingMessage.senderId === currentUserId && incomingMessage.recipientId === selectedUserId) ||
+          (incomingMessage.senderId === selectedUserId && incomingMessage.recipientId === currentUserId));
 
       if (isForCurrentConversation) {
         onNewMessage(incomingMessage);
       } else if (incomingMessage.recipientId === currentUserId && incomingMessage.senderId !== selectedUserId) {
-        // Message sent to current user from a user other than selected user
+        // Message sent to current user from a user other than the currently selected user
         if (onUnreadMessage) {
-          onUnreadMessage(incomingMessage.senderId);
+          onUnreadMessage(incomingMessage.senderId, incomingMessage.$id);
         }
       }
     });
