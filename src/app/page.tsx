@@ -91,7 +91,7 @@ export default function Home() {
 
         {/* Feature Highlights */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left">
-          <div className="p-6 rounded-2xl bg-slate-800/50 border border-slate-800">
+          <div className="p-6 rounded-2xl bg-slate-800/50 border border-slate-800 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:bg-slate-800/80 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/10">
             <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-4">
               ⚡
             </div>
@@ -101,7 +101,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-800/50 border border-slate-800">
+          <div className="p-6 rounded-2xl bg-slate-800/50 border border-slate-800 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:bg-slate-800/80 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/10">
             <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-4">
               🔒
             </div>
@@ -111,7 +111,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-800/50 border border-slate-800">
+          <div className="p-6 rounded-2xl bg-slate-800/50 border border-slate-800 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:bg-slate-800/80 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/10">
             <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold mb-4">
               📱
             </div>
@@ -124,7 +124,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="px-6 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
+      <footer className="px-6 py-6 border-t border-slate-800 text-center text-xs text-slate-400">
         © 2026 Deepyaman Mondal. All rights reserved.
       </footer>
     </div>
