@@ -44,6 +44,7 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
     error: messagesError,
     sending,
     sendMessage,
+    retryMessage,
     addMessageIfNew,
   } = useMessages(currentUser.$id, selectedUser?.userId || selectedUser?.$id);
 
@@ -131,8 +132,8 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
     // Clear unread count for selected user
     setUnreadCounts((prev) => {
       const updated = { ...prev };
-      delete updated[user.userId];
-      delete updated[user.$id];
+      if (user.userId) delete updated[user.userId];
+      if (user.$id) delete updated[user.$id];
       if (currentUser?.$id && typeof window !== 'undefined') {
         try {
           sessionStorage.setItem(`unread_counts_${currentUser.$id}`, JSON.stringify(updated));
@@ -186,6 +187,7 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
               currentUserId={currentUser.$id}
               loading={loadingMessages}
               error={messagesError}
+              onRetryMessage={retryMessage}
             />
             <MessageInput
               onSendMessage={handleSendMessage}

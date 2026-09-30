@@ -5,4 +5,6 @@ export interface Message {
   senderName: string;
   content: string;
   createdAt: string;
+  status?: 'sending' | 'sent' | 'failed';
+  tempId?: string;
 }

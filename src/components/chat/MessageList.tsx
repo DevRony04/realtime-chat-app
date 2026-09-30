@@ -8,6 +8,7 @@ interface MessageListProps {
   currentUserId: string;
   loading: boolean;
   error: string | null;
+  onRetryMessage?: (message: Message) => void;
 }
 
 function formatTimestamp(isoString: string): string {
@@ -20,7 +21,13 @@ function formatTimestamp(isoString: string): string {
   }
 }
 
-export function MessageList({ messages, currentUserId, loading, error }: MessageListProps) {
+export function MessageList({
+  messages,
+  currentUserId,
+  loading,
+  error,
+  onRetryMessage,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,6 +101,41 @@ export function MessageList({ messages, currentUserId, loading, error }: Message
             >
               {message.content}
             </div>
+
+            {/* Outgoing Message Sending Status */}
+            {isCurrentUser && (
+              <div className="mt-1 px-1 text-[10px] flex items-center gap-1 select-none">
+                {message.status === 'sending' && (
+                  <span className="text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                    <svg className="animate-spin h-2.5 w-2.5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Sending...
+                  </span>
+                )}
+                {message.status === 'sent' && (
+                  <span className="text-blue-500 dark:text-blue-400 font-medium flex items-center gap-0.5">
+                    ✓ Sent
+                  </span>
+                )}
+                {message.status === 'failed' && (
+                  <span className="text-red-500 dark:text-red-400 font-medium flex items-center gap-1">
+                    <span>⚠ Failed to send</span>
+                    <span>·</span>
+                    {onRetryMessage && (
+                      <button
+                        type="button"
+                        onClick={() => onRetryMessage(message)}
+                        className="underline hover:text-red-600 font-bold focus:outline-none cursor-pointer"
+                      >
+                        Retry
+                      </button>
+                    )}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
