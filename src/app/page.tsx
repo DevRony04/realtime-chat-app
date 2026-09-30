@@ -125,7 +125,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="px-6 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
-        Production-ready Realtime Chat Application • Next.js & Appwrite
+        © 2026 Deepyaman Mondal. All rights reserved.
       </footer>
     </div>
   );
