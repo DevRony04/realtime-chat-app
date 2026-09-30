@@ -91,15 +91,23 @@ export function UserList({
             {searchQuery ? 'No matching users found.' : 'No other registered users available.'}
           </div>
         ) : (
-          filteredUsers.map((user) => (
-            <UserListItem
-              key={user.$id}
-              user={user}
-              isSelected={user.userId === selectedUserId || user.$id === selectedUserId}
-              unreadCount={(unreadCounts[user.userId] || 0) + (unreadCounts[user.$id] || 0)}
-              onClick={() => onSelectUser(user)}
-            />
-          ))
+          filteredUsers.map((user) => {
+            // Deduplicate count lookup to avoid doubling when user.userId === user.$id
+            const count =
+              user.userId && user.userId !== user.$id
+                ? (unreadCounts[user.userId] || 0) + (unreadCounts[user.$id] || 0)
+                : unreadCounts[user.userId || user.$id] || 0;
+
+            return (
+              <UserListItem
+                key={user.$id}
+                user={user}
+                isSelected={user.userId === selectedUserId || user.$id === selectedUserId}
+                unreadCount={count}
+                onClick={() => onSelectUser(user)}
+              />
+            );
+          })
         )}
       </div>
 
