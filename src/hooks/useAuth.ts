@@ -11,10 +11,10 @@ export function useAuth() {
 
   const fetchUser = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
+      setError(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to fetch session';
       setError(message);
@@ -25,8 +25,31 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    let ignore = false;
+    getCurrentUser()
+      .then((currentUser) => {
+        if (!ignore) {
+          setUser(currentUser);
+          setError(null);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!ignore) {
+          const message = err instanceof Error ? err.message : 'Failed to fetch session';
+          setError(message);
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const loginUser = async (email: string, pass: string) => {
     setLoading(true);

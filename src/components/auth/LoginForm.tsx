@@ -29,11 +29,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     try {
       await onLogin(email.trim(), password);
       router.push('/chat');
-      setTimeout(() => {
-        if (window.location.pathname !== '/chat') {
-          window.location.href = '/chat';
-        }
-      }, 150);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
       setErrorMessage(msg);

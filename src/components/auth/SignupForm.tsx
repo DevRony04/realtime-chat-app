@@ -35,12 +35,6 @@ export function SignupForm({ onSignup }: SignupFormProps) {
     try {
       await onSignup(email.trim(), password, name.trim());
       router.push('/chat');
-      // Direct navigation fallback in case router push is delayed
-      setTimeout(() => {
-        if (window.location.pathname !== '/chat') {
-          window.location.href = '/chat';
-        }
-      }, 150);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
       setErrorMessage(msg);

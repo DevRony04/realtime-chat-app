@@ -48,9 +48,13 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
     addMessageIfNew,
   } = useMessages(currentUser.$id, selectedUser?.userId || selectedUser?.$id);
 
+  const currentUserId = currentUser.$id;
+  const currentUserName = currentUser.name;
+  const currentUserEmail = currentUser.email;
+
   // Fetch all registered user profiles with stable dependency array and internal guard
   useEffect(() => {
-    if (!currentUser || !currentUser.$id) return;
+    if (!currentUserId) return;
 
     let isMounted = true;
     async function loadUsers() {
@@ -59,9 +63,9 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
       try {
         // Self-healing check: ensure currently authenticated user has a profile document in the Users collection
         await createUserProfile({
-          userId: currentUser.$id,
-          name: currentUser.name || 'User',
-          email: currentUser.email || '',
+          userId: currentUserId,
+          name: currentUserName || 'User',
+          email: currentUserEmail || '',
         }).catch((err) => console.warn('Self-healing profile check:', err));
 
         const list = await getUsers();
@@ -84,7 +88,7 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
     return () => {
       isMounted = false;
     };
-  }, [currentUser.$id]);
+  }, [currentUserId, currentUserName, currentUserEmail]);
 
   // Realtime subscription callback for new messages
   const handleRealtimeNewMessage = useCallback(
@@ -106,9 +110,9 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
           ...prev,
           [senderId]: (prev[senderId] || 0) + 1,
         };
-        if (currentUser?.$id && typeof window !== 'undefined') {
+        if (currentUserId && typeof window !== 'undefined') {
           try {
-            sessionStorage.setItem(`unread_counts_${currentUser.$id}`, JSON.stringify(updated));
+            sessionStorage.setItem(`unread_counts_${currentUserId}`, JSON.stringify(updated));
           } catch {
             // Ignore storage errors
           }
@@ -116,7 +120,7 @@ export function ChatLayout({ currentUser, onLogout }: ChatLayoutProps) {
         return updated;
       });
     },
-    [currentUser?.$id]
+    [currentUserId]
   );
 
   // Hook into Appwrite Realtime

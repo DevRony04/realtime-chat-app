@@ -37,9 +37,8 @@ export async function signUp(
 
   // 1. Create Appwrite Auth Account
   const userId = ID.unique();
-  let createdUser;
   try {
-    createdUser = await account.create(userId, trimmedEmail, password, trimmedName);
+    await account.create(userId, trimmedEmail, password, trimmedName);
   } catch (err: unknown) {
     const appwriteErr = err as { message?: string; code?: number };
     if (appwriteErr.code === 409) {

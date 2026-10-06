@@ -13,12 +13,11 @@ export function useMessages(currentUserId?: string, selectedUserId?: string) {
   const fetchMessages = useCallback(async () => {
     if (!currentUserId || !selectedUserId) {
       setMessages([]);
+      setLoading(false);
       return;
     }
 
     setLoading(true);
-    setError(null);
-
     try {
       const fetched = await getConversationMessages(currentUserId, selectedUserId);
       const marked = fetched.map((m) => ({
@@ -27,7 +26,6 @@ export function useMessages(currentUserId?: string, selectedUserId?: string) {
       }));
 
       setMessages((prev) => {
-        // Retain pending optimistic messages ('sending' or 'failed') for active conversation
         const pendingOptimistic = prev.filter(
           (m) =>
             m.senderId === currentUserId &&
@@ -43,6 +41,7 @@ export function useMessages(currentUserId?: string, selectedUserId?: string) {
         merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         return merged;
       });
+      setError(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load messages';
       setError(message);
@@ -52,9 +51,51 @@ export function useMessages(currentUserId?: string, selectedUserId?: string) {
   }, [currentUserId, selectedUserId]);
 
   useEffect(() => {
-    setMessages([]);
-    fetchMessages();
-  }, [fetchMessages]);
+    if (!currentUserId || !selectedUserId) {
+      return;
+    }
+
+    let ignore = false;
+    getConversationMessages(currentUserId, selectedUserId)
+      .then((fetched) => {
+        if (ignore) return;
+        const marked = fetched.map((m) => ({
+          ...m,
+          status: 'sent' as const,
+        }));
+
+        setMessages((prev) => {
+          const pendingOptimistic = prev.filter(
+            (m) =>
+              m.senderId === currentUserId &&
+              m.recipientId === selectedUserId &&
+              (m.status === 'sending' || m.status === 'failed')
+          );
+
+          const map = new Map<string, Message>();
+          marked.forEach((m) => map.set(m.$id, m));
+          pendingOptimistic.forEach((m) => map.set(m.$id, m));
+
+          const merged = Array.from(map.values());
+          merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          return merged;
+        });
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (ignore) return;
+        const message = err instanceof Error ? err.message : 'Failed to load messages';
+        setError(message);
+      })
+      .finally(() => {
+        if (ignore) return;
+        setLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [currentUserId, selectedUserId]);
 
   // Add Realtime message with optimistic reconciliation and deduplication
   const addMessageIfNew = useCallback((incomingMessage: Message) => {
